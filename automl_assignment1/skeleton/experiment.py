@@ -17,7 +17,8 @@ from random_forest import final_test_evaluation, make_evaluator
 from random_search import optimise_random_search
 from smbo import optimise_smbo
 from tabular_foundation import run_foundation_model
-
+import json
+from datetime import datetime
 # Update this if the provided largest dataset is replaced.
 FOUNDATION_DATASET = "covertype"
 
@@ -135,13 +136,22 @@ def main() -> None:
 
     args = parse_args()
     names = list(DATASETS) if args.dataset == "all" else [args.dataset]
+    all_results = []
     for name in names:
         print(f"Running {name} with seed {args.seed}", flush=True)
         results = run_dataset(name, args)
         # TODO: save results in a format of your choice, along with the settings
         # needed to reproduce the run. Retain enough information for your plots
         # and tables. This example only prints final results; it saves no files.
+        print(f"Running {name} with seed {args.seed}", flush=True)
+        results = run_dataset(name, args)
+        all_results.extend(results)
 
-
+    # Save results to disk
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_file = Path(f"results_{args.profile}_{timestamp}.json")
+    with open(output_file, "w") as f:
+        json.dump(all_results, f, indent=2)
+    print(f"Results saved to {output_file}")
 if __name__ == "__main__":
     main()

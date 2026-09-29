@@ -7,8 +7,9 @@ Choose and explain the method's settings and how you retain search results.
 from __future__ import annotations
 
 from typing import Any
-
-from random_forest import Config, Evaluator
+import optuna
+from optuna.samplers import TPESampler
+from random_forest import Config, Evaluator, SEARCH_SPACE
 
 
 def optimise_smbo(
@@ -26,4 +27,23 @@ def optimise_smbo(
     Return the selected configuration and results needed for your analysis.
     """
 
-    raise NotImplementedError
+    history = []
+
+    def objective(trial: optuna.Trial) -> float:
+        config = {
+            "max_depth": trial.suggest_categorical("max_depth", SEARCH_SPACE["max_depth"]),
+            "max_features": trial.suggest_categorical("max_features", SEARCH_SPACE["max_features"]),
+            "min_samples_leaf": trial.suggest_categorical("min_samples_leaf", SEARCH_SPACE["min_samples_leaf"]),
+        }
+        result = evaluator(config, n_trees, seed)
+        history.append(result)
+        return result["objective"]
+
+    # Suppress verbose Optuna console logging to keep the output clean
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    
+    sampler = TPESampler(seed=seed)
+    study = optuna.create_study(sampler=sampler, direction="maximize")
+    study.optimize(objective, n_trials=n_trials)
+
+    return study.best_params, history

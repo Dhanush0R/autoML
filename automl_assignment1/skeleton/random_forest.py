@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import balanced_accuracy_score
 
 Config = dict[str, Any]
 Evaluator = Callable[[Config, int, int], dict[str, Any]]
@@ -36,8 +37,13 @@ def sample_configuration(rng: np.random.Generator) -> Config:
     Return the hyperparameters to pass to RandomForestClassifier. Account for
     dependencies between parameters if you extend the example search space.
     """
-
-    raise NotImplementedError("Implement sampling or use a package's sampler")
+    """Sample a legal configuration using rng."""
+    return {
+        "max_depth": SEARCH_SPACE["max_depth"][rng.integers(len(SEARCH_SPACE["max_depth"]))],
+        "max_features": SEARCH_SPACE["max_features"][rng.integers(len(SEARCH_SPACE["max_features"]))],
+        "min_samples_leaf": int(SEARCH_SPACE["min_samples_leaf"][rng.integers(len(SEARCH_SPACE["min_samples_leaf"]))]),
+    }
+    # raise NotImplementedError("Implement sampling or use a package's sampler")
 
 
 def make_classifier(config: Config, n_estimators: int, seed: int) -> RandomForestClassifier:
@@ -65,7 +71,13 @@ def predictive_metrics(
     and the foundation comparison. This function must not fit the model.
     """
 
-    raise NotImplementedError("Implement predictive_metrics in random_forest.py")
+    """Evaluate the fitted model using Balanced Accuracy."""
+    y_pred = model.predict(X)
+    return {
+        "balanced_accuracy": float(balanced_accuracy_score(y, y_pred))
+    }
+
+    # raise NotImplementedError("Implement predictive_metrics in random_forest.py")
 
 
 def validation_objective(metrics: dict[str, float]) -> float:
@@ -74,8 +86,10 @@ def validation_objective(metrics: dict[str, float]) -> float:
     Explain its relationship to the primary metric and whether higher or lower
     is better. Apply that direction consistently in all optimisers.
     """
-
-    raise NotImplementedError("Implement validation_objective in random_forest.py")
+    """Return the scalar objective used to compare configurations."""
+    # Higher is better for Balanced Accuracy. All optimizers must seek to maximize this value.
+    return metrics["balanced_accuracy"]
+    # raise NotImplementedError("Implement validation_objective in random_forest.py")
 
 
 def make_evaluator(

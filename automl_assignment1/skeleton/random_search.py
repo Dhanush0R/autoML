@@ -7,8 +7,8 @@ to retain the results needed to analyse search progress and computational effort
 from __future__ import annotations
 
 from typing import Any
-
-from random_forest import Config, Evaluator
+import numpy as np
+from random_forest import Config, Evaluator, sample_configuration
 
 
 def optimise_random_search(
@@ -25,4 +25,18 @@ def optimise_random_search(
     Return the selected configuration and results needed for your analysis.
     """
 
-    raise NotImplementedError
+    rng = np.random.default_rng(seed)
+    best_config = {}
+    best_objective = -float("inf")
+    history = []
+
+    for _ in range(n_trials):
+        config = sample_configuration(rng)
+        result = evaluator(config, n_trees, seed)
+        history.append(result)
+
+        if result["objective"] > best_objective:
+            best_objective = result["objective"]
+            best_config = config
+
+    return best_config, history
