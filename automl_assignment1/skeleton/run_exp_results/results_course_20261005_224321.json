@@ -1,0 +1,14 @@
+[
+  {
+    "dataset": "covertype",
+    "method": "foundation",
+    "seed": 100,
+    "result": {
+      "metrics": {
+        "balanced_accuracy": 0.5900609829923104
+      },
+      "elapsed_sec": 2742.1918202999514,
+      "context_samples": 2000
+    }
+  }
+]
